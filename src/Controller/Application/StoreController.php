@@ -271,7 +271,45 @@ class StoreController extends BaseVueController
         $filePath = FileUploadService::CONTENT_PATH . "/temp-uploads/$folder/$fileName";
 
         // TODO: read file and process import
+        $importService = new ImportService();
+        $importService->loadDocument($filePath);
 
-        return $this->json([]);
+        $store = new Store();
+        $storeService = new StoreService($this->entityManager);
+
+        $attributeInformation = array_column($this->extractImportExportAttributeInformation(), 'setterFunction','columnName');
+        $fileContent = $importService->toIterator(null,1,1);
+        $brandName = '';
+      
+        try {
+            foreach ($fileContent as $row) {
+                foreach ($row as $header => $cell) {    
+                   if(!empty($attributeInformation[trim(ucwords($header))])){
+                        if(strtolower($header) !== 'brand'){
+                           $store->{$attributeInformation[trim(ucwords($header))]}($cell);
+                        }else{
+                            $branName = $cell;
+                        }
+                    }else{
+                        return $this->json(['result' => "header $header is spelled incorrectly"],Response::HTTP_PRECONDITION_FAILED);
+                    }
+                }
+            }
+
+            $brand = $storeService->discoverBrandByName($branName);
+            $store->setBrand($brand);
+
+            $errors = sp_extract_errors($validator->validate($store));
+            if (!empty($errors)) {
+               return $this->json(compact('errors'), Response::HTTP_PRECONDITION_FAILED);
+           }
+       
+           $this->entityManager->persist($store);
+           $this->entityManager->flush();
+        } catch (\Throwable $th) {
+           
+        }  
+        //TODO: CHECK if api and name already exist, add brand
+        return $this->json(['result' => $store]);
     }
 }
