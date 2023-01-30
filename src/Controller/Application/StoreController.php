@@ -79,6 +79,12 @@ class StoreController extends BaseVueController
         return $this->json($brands);
     }
 
+    #[Route('/api/filters/stores', name: 'api_fetch_all_stores')]
+    public function getStoresFilter(): JsonResponse {
+        $stores = $this->entityManager->query('select id, name from store order by name');
+        return $this->json($stores);
+    }
+
     #[Route('/api/stores/temporary-folder', name: 'api_stores_temporary_folder', methods: 'GET')]
     public function getTemporaryUploadFolder(): JsonResponse {
         return $this->json(['folder' => sp_unique_string_based_on_uniqid('store')]);

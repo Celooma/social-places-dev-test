@@ -9,7 +9,8 @@
         "api_users_filters": "\/api\/users\/filters",
         "api_users_me": "\/api\/users\/me",
         "api_user_information": "\/api\/users\/:user",
-        "api_users_primary_roles": "\/api\/users\/fetch\/roles"
+        "api_users_primary_roles": "\/api\/users\/fetch\/roles",
+        "api_fetch_all_stores": "\/api\/filters\/stores"
     },
     "POST": {
         "api_login": "\/api\/login",
@@ -25,7 +26,8 @@
         "api_users_filters": "\/api\/users\/filters",
         "api_user_unique_email": "\/api\/users\/unique",
         "api_user_create": "\/api\/users\/create",
-        "api_user_edit": "\/api\/users\/edit\/:user"
+        "api_user_edit": "\/api\/users\/edit\/:user",
+        "api_contact_create": "\/api\/contacts\/create"
     },
     "PUT": {
         "api_dashboard_links": "\/api\/dashboard-links",
