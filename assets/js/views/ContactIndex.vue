@@ -13,13 +13,13 @@
                         :value="alert.success"
                         absolute
                         right
-                        shaped
                         top
+                        color="success"
                         >
                     <strong>{{alert.message}}</strong> 
                     </v-snackbar>
 
-                <v-card id="loginSection" class="login-block px-5 py-3 mt-4">
+                <v-card id="loginSection" class="contactblock px-5 py-3 mt-4">
                     <h3>Create point of contact</h3>
                     <v-card-text>
                         <v-form v-model="loginForm" ref="loginForm">
@@ -126,7 +126,7 @@ export default {
                 // The way Symfony is handling the internals of the api/login route we can't use FormData
                 await httpClient.axiosClient.post('api/contacts/create',this.contact).then(()=>{ console.log('yes')})
                 this.alert.success = true;
-                console.log(this.contact)
+                this.alert.message = 'Contact created';
              
             } catch (error) {
                 this.logInError = error.response.data.error;
@@ -157,7 +157,7 @@ export default {
     
 }
 
-.login-block {
+.contactblock {
     width: 500px;
 }
 
