@@ -23,8 +23,9 @@ class DefaultController extends AbstractController
     #[Route('/users/edit/{id}', name: 'users_edit')]
     #[Route('/stores', name: 'stores', defaults: ['nav' => ['name' => 'Stores', 'icon' => 'fas fa-store', 'dashboard' => 'admin']])]
     #[Route('/stores/import', name: 'stores_import')]
+    #[Route('/contacts', name: 'contacts')]
     public function index(Request $request): RedirectResponse|Response {
-        if ($this->getUser() === null && $request->attributes->get('_route') !== 'login') {
+        if ($this->getUser() === null && !in_array($request->attributes->get('_route'), ['login', 'contacts'], true)) {
             return $this->redirect($this->generateUrl('login'));
         }
         if ($this->getUser() !== null && in_array($request->attributes->get('_route'), ['login', 'index'], true)) {

@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enums\ContactGender;
 use App\Repository\ContactRepository;
 use App\Traits\Entity\HasDateCreated;
 use Doctrine\ORM\Mapping as ORM;
@@ -39,10 +40,8 @@ class Contact
     #[Assert\NotBlank]
     private string $cellphone;
 
-    #[ORM\Column(type: 'string', length: 10)]
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 4, max: 10)]
-    private string $gender;
+    #[ORM\Column(type: 'integer', nullable: true,length:10, enumType: ContactGender::class)]
+    private ContactGender $gender;
 
     public function getId(): ?int
     {
@@ -91,17 +90,29 @@ class Contact
         $this->cellphone = $cellphone;
     }
 
-    public function getGender(): ?string
+    public function getGender(): ContactGender
     {
         return $this->gender;
     }
 
-    public function setGender(string $gender): void
+    public function setGender(ContactGender $gender): void
     {
-        $this->gender = $gender;
+        $this->gender = $gender ;
     }
 
-    public function getStore(Store $store): Store{
-        return $this->store = $store;
+    public function setGenderFromName(string $genderName): void {
+        $this->gender = ContactGender::fromName($genderName);
     }
+    public function setStore(Store $store): void{
+        $this->store = $store;
+    }
+
+    public function getStore(): Store{
+        return $this->store;
+    }
+
+    public function getFullName(): string{
+        return "$this->name $this->surname";
+    }
+
 }
