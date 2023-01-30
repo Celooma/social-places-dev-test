@@ -45,7 +45,7 @@ class Store
     private StoreStatus $status;
 
     #[ORM\Column(type: 'string', length: 50, unique: true, nullable: false)]
-    #[ImportExportAttribute('API ID', isIdentifierField: true)]
+    #[ImportExportAttribute('Api Id', isIdentifierField: true)]
     #[Assert\NotBlank]
     private ?string $apiId;
 
@@ -66,7 +66,7 @@ class Store
 
     #[ORM\Column(type: 'string', length: 1000, nullable: true)]
     #[Assert\Length(max: 1000)]
-    #[ImportExportAttribute('Facebook URL')]
+    #[ImportExportAttribute('Facebook Url')]
     private ?string $facebookUrl;
 
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
@@ -85,7 +85,7 @@ class Store
 
     #[ORM\Column(type: 'string', length: 1000, nullable: true)]
     #[Assert\Length(max: 1000)]
-    #[ImportExportAttribute('Google MAP URL')]
+    #[ImportExportAttribute('Google Map Url')]
     private ?string $googleMapsUrl;
 
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]

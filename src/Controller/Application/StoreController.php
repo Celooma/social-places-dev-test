@@ -5,15 +5,12 @@ namespace App\Controller\Application;
 use App\Attributes\ImportExportAttribute;
 use App\Attributes\ImportProcessorAttribute;
 use App\Constants\PhpSpreadsheetConstants;
-use App\Entity\Brand;
 use App\Entity\Store;
-use App\Enums\StoreStatus;
 use App\Services\ExportService;
 use App\Services\FileUploadService;
 use App\Services\ImportService;
 use App\Services\StoreService;
 use App\ViewModels\StoreViewModel;
-use App\ViewModels\UserViewModel;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -32,6 +29,8 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Doctrine\Persistence\ManagerRegistry;
+
 
 class StoreController extends BaseVueController
 {
@@ -265,7 +264,7 @@ class StoreController extends BaseVueController
      * Feel free to update any supporting code to the table to help speed things up
      */
     #[Route('/api/stores/import/process', name: 'api_store_process_import', methods: 'POST')]
-    public function import(Request $request, ValidatorInterface $validator): StreamedResponse|JsonResponse {
+    public function import(Request $request, ValidatorInterface $validator, EntityManagerInterface $entityManager, ManagerRegistry $doctrine): StreamedResponse|JsonResponse {
         $folder = $request->get('folder');
         $fileName = $request->get('fileName');
         $filePath = FileUploadService::CONTENT_PATH . "/temp-uploads/$folder/$fileName";
@@ -275,8 +274,9 @@ class StoreController extends BaseVueController
         $importService->loadDocument($filePath);
 
         $store = new Store();
-        $storeService = new StoreService($this->entityManager);
-
+        $managerRegistry = $doctrine->getManager();
+        $storeService = new StoreService($doctrine);
+        
         $attributeInformation = array_column($this->extractImportExportAttributeInformation(), 'setterFunction','columnName');
         $fileContent = $importService->toIterator(null,1,1);
         $brandName = '';
@@ -286,7 +286,7 @@ class StoreController extends BaseVueController
                 foreach ($row as $header => $cell) {    
                    if(!empty($attributeInformation[trim(ucwords($header))])){
                         if(strtolower($header) !== 'brand'){
-                           $store->{$attributeInformation[trim(ucwords($header))]}($cell);
+                          $store->{$attributeInformation[trim(ucwords($header))]}($cell);
                         }else{
                             $branName = $cell;
                         }
@@ -295,7 +295,6 @@ class StoreController extends BaseVueController
                     }
                 }
             }
-
             $brand = $storeService->discoverBrandByName($branName);
             $store->setBrand($brand);
 
@@ -304,12 +303,13 @@ class StoreController extends BaseVueController
                return $this->json(compact('errors'), Response::HTTP_PRECONDITION_FAILED);
            }
        
-           $this->entityManager->persist($store);
-           $this->entityManager->flush();
+           $managerRegistry->persist($store);
+           $managerRegistry->flush();
+
         } catch (\Throwable $th) {
            
         }  
-        //TODO: CHECK if api and name already exist, add brand
+    
         return $this->json(['result' => $store]);
     }
 }
