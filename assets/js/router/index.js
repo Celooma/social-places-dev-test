@@ -9,6 +9,7 @@ const UserIndex = () => import ('~/views/users/UserIndex');
 const UserCreateEdit = () => import ('~/views/users/UserCreateEdit');
 const StoreIndex = () => import ('~/views/stores/StoreIndex');
 const StoreImport = () => import ('~/views/stores/StoreImport');
+const ContactIndex = () => import('~/views/ContactIndex')
 
 
 Vue.use(VueRouter);
@@ -38,6 +39,14 @@ const router = new VueRouter({
                             name: 'Login',
                             meta: {
                                 title: 'Social Places | Login'
+                            }
+                        },
+                        {
+                            path: 'contacts',
+                            component: ContactIndex,
+                            name: 'contact',
+                            meta: {
+                                title: 'Social Places | Contact'
                             }
                         }
                     ]

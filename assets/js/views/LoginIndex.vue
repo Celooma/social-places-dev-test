@@ -49,7 +49,12 @@
                     <div class="d-flex justify-end">
                         <v-btn :loading="loading" color="primary" text @click="logIn">Log In</v-btn>
                     </div>
+                    
+                    <div class="d-flex justify-end">
+                        <v-btn @click="goToContact" color="primary" text>Create point of contact</v-btn>
+                    </div>
                 </v-card>
+                    
             </div>
         </div>
     </div>
@@ -90,6 +95,7 @@ export default {
                 this.loading = false;
             }
         },
+        goToContact(){ this.$router.push('contacts')}
     },
 }
 </script>
