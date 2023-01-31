@@ -5,15 +5,14 @@ namespace App\Controller\Application;
 use App\Attributes\ImportExportAttribute;
 use App\Attributes\ImportProcessorAttribute;
 use App\Constants\PhpSpreadsheetConstants;
-use App\Entity\Brand;
 use App\Entity\Store;
+use App\Entity\Brand;
 use App\Enums\StoreStatus;
 use App\Services\ExportService;
 use App\Services\FileUploadService;
 use App\Services\ImportService;
 use App\Services\StoreService;
 use App\ViewModels\StoreViewModel;
-use App\ViewModels\UserViewModel;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
@@ -32,6 +31,8 @@ use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Doctrine\Persistence\ManagerRegistry;
+
 
 class StoreController extends BaseVueController
 {
@@ -77,12 +78,6 @@ class StoreController extends BaseVueController
     public function getBrandsFilter(): JsonResponse {
         $brands = $this->entityManager->query('select id, name from brand order by name');
         return $this->json($brands);
-    }
-
-    #[Route('/api/filters/stores', name: 'api_fetch_all_stores')]
-    public function getStoresFilter(): JsonResponse {
-        $stores = $this->entityManager->query('select id, name from store order by name');
-        return $this->json($stores);
     }
 
     #[Route('/api/stores/temporary-folder', name: 'api_stores_temporary_folder', methods: 'GET')]
@@ -271,13 +266,52 @@ class StoreController extends BaseVueController
      * Feel free to update any supporting code to the table to help speed things up
      */
     #[Route('/api/stores/import/process', name: 'api_store_process_import', methods: 'POST')]
-    public function import(Request $request, ValidatorInterface $validator): StreamedResponse|JsonResponse {
+    public function import(Request $request, ValidatorInterface $validator, EntityManagerInterface $entityManager, ManagerRegistry $doctrine): StreamedResponse|JsonResponse {
         $folder = $request->get('folder');
         $fileName = $request->get('fileName');
         $filePath = FileUploadService::CONTENT_PATH . "/temp-uploads/$folder/$fileName";
 
         // TODO: read file and process import
+        $importService = new ImportService();
+        $importService->loadDocument($filePath);
 
-        return $this->json([]);
+        $store = new Store();
+        $managerRegistry = $doctrine->getManager();
+        $storeService = new StoreService($doctrine);
+        
+        $attributeInformation = array_column($this->extractImportExportAttributeInformation(), 'setterFunction','columnName');
+        $fileContent = $importService->toIterator(null,1,1);
+        $brandName = '';
+      
+        try {
+            foreach ($fileContent as $row) {
+                foreach ($row as $header => $cell) {    
+                   if(!empty($attributeInformation[trim(ucwords($header))])){
+                        if(strtolower($header) !== 'brand'){
+                          $store->{$attributeInformation[trim(ucwords($header))]}($cell);
+                        }else{
+                            $branName = $cell;
+                        }
+                    }else{
+                        return $this->json(['result' => "header $header is spelled incorrectly"],Response::HTTP_PRECONDITION_FAILED);
+                    }
+                }
+            }
+            $brand = $storeService->discoverBrandByName($branName);
+            $store->setBrand($brand);
+
+            $errors = sp_extract_errors($validator->validate($store));
+            if (!empty($errors)) {
+               return $this->json(compact('errors'), Response::HTTP_PRECONDITION_FAILED);
+           }
+       
+           $managerRegistry->persist($store);
+           $managerRegistry->flush();
+
+        } catch (\Throwable $th) {
+           
+        }  
+    
+        return $this->json(['result' => $store]);
     }
 }
